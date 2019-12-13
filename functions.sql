@@ -1,6 +1,7 @@
 -- drop all functions
 drop function if exists reset_elo_ratings;
 drop function if exists update_elo_ratings;
+drop function if exists get_k_factor;
 drop function if exists get_rating;
 drop function if exists get_probability;
 
@@ -16,11 +17,31 @@ $$ language sql immutable;
 /**
  * get_rating
  * $1 (int) rating (the current rating of the subject)
- * $2 (deicmal) score (1 = win, 0.5 = draw, 0 = loss)
- * $3 (decimal) expected score (calculated with "get_probability")
+ * $2 (int) k factor (the development coefficient)
+ * $4 (deicmal) score (1 = win, 0.5 = draw, 0 = loss)
+ * $4 (decimal) expected score (calculated with "get_probability")
  */
-create function get_rating(int, decimal, decimal) returns int as $$
-    select ( $1 + 32 * ( $2 - $3 ) )::int
+create function get_rating(int, int, decimal, decimal) returns int as $$
+    select ( $1 + $2 * ( $3 - $4 ) )::int
+$$ language sql immutable;
+
+/**
+ * get_k_factor
+ * $1 (int) rating (the subject/player rating)
+ *     players below 2100: k-factor of 32 used
+ *     players between 2100 and 2400: k-factor of 24 used
+ *     players above 2400: k-factor of 16 used.
+ */
+create function get_k_factor(int) returns int as $$
+    select (
+        case when $1 < 2100 then
+            32
+        when $1 between 2100 and 2400 then
+            24
+        when $1 > 200 then
+            16
+        end
+    )
 $$ language sql immutable;
 
 /**
@@ -41,12 +62,14 @@ begin
 
         update student set student_rating = get_rating(
             old_student_rating,
+            get_k_factor(old_student_rating),
             item.score,
             get_probability(old_problem_rating, old_student_rating)
         ) where student_id = item.student_id;
 
         update problem set problem_rating = get_rating(
             old_problem_rating,
+            get_k_factor(old_problem_rating),
             item.score,
             get_probability(old_student_rating, old_problem_rating)
         ) where problem_id = item.problem_id;
