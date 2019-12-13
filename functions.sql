@@ -1,4 +1,5 @@
 -- drop all functions
+drop function if exists reset_elo_ratings;
 drop function if exists update_elo_ratings;
 drop function if exists get_rating;
 drop function if exists get_probability;
@@ -50,5 +51,18 @@ begin
             get_probability(old_student_rating, old_problem_rating)
         ) where problem_id = item.problem_id;
     end loop;
+end;
+$$ language plpgsql;
+
+/**
+ * reset_elo_ratings
+ */
+create function reset_elo_ratings() returns void as $$
+begin
+    lock table student in access exclusive mode;
+    lock table problem in access exclusive mode;
+
+    update student set student_rating = 1000;
+    update problem set problem_rating = 1000;
 end;
 $$ language plpgsql;
