@@ -31,6 +31,9 @@ declare
     old_student_rating int;
     old_problem_rating int;
 begin
+    lock table student in access exclusive mode;
+    lock table problem in access exclusive mode;
+
     for item in select * from assignment order by assignment_id, problem_id asc loop
         old_student_rating := student_rating from student where student_id = item.student_id;
         old_problem_rating := problem_rating from problem where problem_id = item.problem_id;
