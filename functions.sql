@@ -75,7 +75,7 @@ begin
         ) where problem_id = item.problem_id;
     end loop;
 end;
-$$ language plpgsql;
+$$ language plpgsql volatile;
 
 /**
  * reset_elo_ratings
@@ -88,4 +88,4 @@ begin
     update student set student_rating = 1000;
     update problem set problem_rating = 1000;
 end;
-$$ language plpgsql;
+$$ language plpgsql volatile;
