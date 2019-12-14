@@ -59,7 +59,7 @@ alter table problem add primary key (problem_id);
 create table assignment as select
 	assignment_id::int,
 	problem_id::int,
-	user_id::int as student_id,
+	user_id::int student_id,
 	(case when correct = 1 then 1
 	 when attempt_count > 1 then 0.5
 	 else 0 end)::decimal score
