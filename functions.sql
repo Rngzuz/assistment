@@ -38,7 +38,7 @@ create function get_k_factor(int) returns int as $$
             32
         when $1 between 2100 and 2400 then
             24
-        when $1 > 200 then
+        when $1 > 2400 then
             16
         end
     )
@@ -56,9 +56,16 @@ begin
     lock table student in access exclusive mode;
     lock table problem in access exclusive mode;
 
-    for item in select * from assignment order by assignment_id, problem_id asc loop
-        old_student_rating := student_rating from student where student_id = item.student_id;
-        old_problem_rating := problem_rating from problem where problem_id = item.problem_id;
+    for item in
+        select *
+            from assignment
+            order by assignment_id, problem_id asc
+    loop
+        old_student_rating := student_rating
+            from student where student_id = item.student_id;
+
+        old_problem_rating := problem_rating
+            from problem where problem_id = item.problem_id;
 
         update student set student_rating = get_rating(
             old_student_rating,
